@@ -31,7 +31,8 @@ pin-project = { version = "^1.0.8", optional = true }
 regex = "1.4.2"
 rpassword = { version = "5.0.1", optional = true }
 thiserror = "1.0.26"
-suppaftp = { git = "https://github.com/nvksv/suppaftp" }
+#suppaftp = { git = "https://github.com/nvksv/suppaftp" }
+suppaftp = { path = "../suppaftp" }
 
 
 [dev-dependencies]
@@ -42,7 +43,7 @@ rand = "0.8.4"
 [features]
 #default = ["async-secure"]
 #default = ["async"]
-default = ["secure"]
+default = ["sync-secure"]
 #default = []
 
 # Enable async support for suppaftp
@@ -50,7 +51,7 @@ async = ["suppaftp/async", "async-std", "pin-project"]
 async-secure = ["suppaftp/async-secure", "async-std", "async-native-tls", "pin-project"]
 
 # Enable support of FTPS which requires native-tls (openssl is required on Linux)
-secure = ["suppaftp/secure", "native-tls"]
+sync-secure = ["suppaftp/sync-secure", "native-tls"]
 
 # Don't enable this feature; is used by suppaftp binary only
 cli-bin = ["rpassword"]

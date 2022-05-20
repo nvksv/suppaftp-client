@@ -1,9 +1,10 @@
-use suppaftp::{FtpStream, types::{Result, FtpError}, list};
+use suppaftp::{sync_ftp::FtpStream, types::{FtpResult, FtpError}, list};
 use crate::{
     mlst::{MlstFact, parse_mlst_feat, parse_mlst_line, list_to_ftp},
     types::{FtpItem, FtpItemType, FtpList}
 };
 use native_tls::{TlsConnector};
+use std::str::FromStr;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -223,7 +224,7 @@ impl FtpClient {
         }
     }
 
-    fn reconnect(&mut self) -> Result<&mut FtpStream> {
+    fn reconnect(&mut self) -> FtpResult<&mut FtpStream> {
         // drop existing ftp connection
         self.ftp = None;
 
@@ -261,28 +262,28 @@ impl FtpClient {
         Ok(self.ftp.as_mut().unwrap())
     }
 
-    pub fn cdup(&mut self) -> Result<()> {
+    pub fn cdup(&mut self) -> FtpResult<()> {
         ftp!(self, cdup())
     }
 
-    pub fn chdir(&mut self, path: &str) -> Result<()> {
+    pub fn chdir(&mut self, path: &str) -> FtpResult<()> {
         ftp!(self, cwd(path))
     }
 
-    fn list_mlsd(&mut self) -> Result<FtpList> {
+    fn list_mlsd(&mut self) -> FtpResult<FtpList> {
         list_fn!(self, mlsd, |s| parse_mlst_line(s.as_str()).map_err(|_| FtpError::BadResponse))
     }
 
-    fn list_nlst(&mut self) -> Result<FtpList> {
+    fn list_nlst(&mut self) -> FtpResult<FtpList> {
         unimplemented!()
     }
 
-    fn list_stat(&mut self) -> Result<FtpList> {
+    fn list_stat(&mut self) -> FtpResult<FtpList> {
         unimplemented!()
     }
 
-    fn list_list(&mut self) -> Result<FtpList> {
-        list_fn!(self, list, |s| list::File::from_line(s.as_str()).map(|f| list_to_ftp(&f)).map_err(|_| FtpError::BadResponse))
+    fn list_list(&mut self) -> FtpResult<FtpList> {
+        list_fn!(self, list, |s| list::File::from_str(s.as_str()).map(|f| list_to_ftp(&f)).map_err(|_| FtpError::BadResponse))
     }
 
     fn get_list_mode(&mut self) -> FtpClientListMode {
@@ -306,7 +307,7 @@ impl FtpClient {
         FtpClientListMode::List
     }
 
-    pub fn list(&mut self) -> Result<FtpList> {
+    pub fn list(&mut self) -> FtpResult<FtpList> {
         match self.get_list_mode() {
             FtpClientListMode::List => self.list_list(),
             FtpClientListMode::Nlst => self.list_nlst(),
@@ -320,7 +321,7 @@ impl FtpClient {
 mod test {
 
     use super::*;
-    use crate::utils::test::*;
+    use suppaftp::test::*;
 
     #[derive(Debug)]
     struct TestSettings {}
